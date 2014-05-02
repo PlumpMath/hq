@@ -64,10 +64,13 @@
     (println "Proc" id "not found.")))
 
 (defn kill*
-  "Stop all procs in <group>."
-  [game group]
-  (doseq [id (ids game group)]
-    (kill game id)))
+  "Stop all procs or all procs in <group>."
+  ([game]
+   (doseq [id (keys @(:procs game))]
+     (kill game id)))
+  ([game group]
+   (doseq [id (ids game group)]
+     (kill game id))))
 
 (defn remove-key
   "Remove a key from a proc with <id>."

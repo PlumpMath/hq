@@ -9,14 +9,16 @@
   (Game. (atom {}) (atom nil)))
 
 (defn- draw-failed-proc [proc]
-  (quil/fill 250 50 250)
+  (quil/fill 255 0 255)
   (if-let [rect (:rect proc)]
     (do
       (comps/draw-rect rect)
       (quil/stroke 0 255 255)
       (quil/line (:x rect) (:y rect) (+ (:x rect) (:w rect)) (+ (:y rect) (:h rect)))
       (quil/line (+ (:x rect) (:w rect)) (:y rect) (:x rect) (+ (:y rect) (:h rect))))
-    (quil/rect 10 10 10 10)))
+    (do
+      (quil/stroke 0)
+      (quil/rect 10 10 20 20))))
 
 (defn- draw-proc [game [id proc]]
   (if (= (:status proc) :ok)
