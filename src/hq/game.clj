@@ -31,8 +31,13 @@
     (draw-failed-proc proc))
   (when @(:edit game)
     (quil/fill 255)
-    (if-let [rect (:rect proc)]
-      (quil/text (str id) (+ (:x rect) 5) (+ (:y rect) 15)))))
+    (when-let [rect (:rect proc)]
+      (quil/text (str id) (+ (:x rect) 5) (+ (:y rect) 15))
+      (when (-> proc :editor :selected)
+        (quil/stroke 0 255 255)
+        (quil/no-fill)
+        (quil/stroke-weight 5)
+        (comps/draw-rect rect)))))
 
 (defn- draw [game]
   (quil/background 200)
@@ -45,11 +50,43 @@
 (defn- swap-edit-mode [game]
   (swap! (:edit game) #(not %)))
 
+(defn- kill-selected [game]
+  (let [selected-ids (keys (filter (fn [[id proc]] (-> proc :editor :selected)) @(:procs game)))]
+    (doseq [id selected-ids]
+      (proc/kill game id))))
+
 (defn- key-pressed [game]
-  ;(println "Key pressed:" (quil/key-code))
+  (println "Key pressed:" (quil/key-code))
   (case (quil/key-code)
     192 (swap-edit-mode game)
-    :no-match))
+    :no-match)
+  (when @(:edit game)
+    (case (quil/key-code)
+      8 (kill-selected game)
+      :no-match)))
+
+(defn get-mouse-pos []
+  [(quil/mouse-x) (quil/mouse-y)])
+
+(defn hit? [[px py] [id proc]]
+  (when-let [rect (:rect proc)]
+    (let [x (:x rect)
+          y (:y rect)
+          w (:w rect)
+          h (:h rect)]
+      (and (< x px (+ x w))
+           (< y py (+ y h))))))
+
+(defn procs-at-pos [game pos]
+  (keys (filter (partial hit? pos) @(:procs game))))
+
+(defn- mouse-clicked [game]
+  ;(println "Mouse clicked:" (quil/mouse-x) (quil/mouse-y))
+  (when @(:edit game)
+    (proc/set-selected* game false)
+    (when-let [selection-id (first (procs-at-pos game (get-mouse-pos)))]
+      (println "Proc at mouse click:" selection-id)
+      (proc/set-selected game selection-id true))))
 
 (defn start [game]
   (quil/defsketch Sketch
@@ -57,6 +94,7 @@
     :setup (fn [] )
     :draw (fn [] (draw game))
     :key-pressed (fn [] (key-pressed game))
+    :mouse-clicked (fn [] (mouse-clicked game))
     :size [512 512])
   (reset! (:sketch game) Sketch))
 

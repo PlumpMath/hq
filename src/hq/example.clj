@@ -16,6 +16,7 @@
   (comps/draw-rect (:rect proc)))
 
 (proc/run g [:bg 0] {:layer 0
+                     :rect (comps/rect 40 40 40 40)
                      :renderfn (fn [_] (quil/background 50 20 25))})
 
 (defn little-rect [y]
@@ -29,8 +30,7 @@
 
 ;(proc/run g [:master 0] {:renderfn (fn [_] (quil/background 10 10 10))})
 
-(proc/kill* g :ent)
-
-(proc/remove-key g [:ent 1] :color)
-
+(proc/kill* g)
+(proc/get-proc g [:ent 2])
+(proc/all g)
 
