@@ -1,9 +1,9 @@
 (ns hq.proc)
 
-(defrecord Proc [status handler renderfn])
+(defrecord Proc [status layer handler renderfn])
 
 (defn make-proc []
-  (Proc. :ok nil nil))
+  (Proc. :ok 0 nil nil))
 
 (defn get-proc [game id]
   (get @(:procs game) id))
@@ -15,9 +15,13 @@
       (swap! (:procs game) (fn [procs] (assoc procs id new-proc)))
       new-proc)))
 
+(defn set-status [game id status]
+  (swap! (:procs game) assoc-in [id :status] status))
+
 (defn run [game id settings]
   (let [proc (ensure-proc game id)]
-    (swap! (:procs game) assoc id (merge proc settings))))
+    (swap! (:procs game) assoc id (merge proc settings))
+    (set-status game id :ok)))
 
 (defn kill [game id]
   (if-let [proc (get-proc game id)]
