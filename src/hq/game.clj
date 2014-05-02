@@ -39,10 +39,14 @@
         (quil/stroke-weight 5)
         (comps/draw-rect rect)))))
 
+(defn- layer-sort [[id proc]]
+  (:layer proc))
+
 (defn- draw [game]
   (quil/background 200)
-  (doall (map (partial draw-proc game) (sort-by (fn [[id proc]] (:layer proc)) @(:procs game))))
+  (doall (map (partial draw-proc game) (sort-by layer-sort @(:procs game))))
   (when @(:edit game)
+    (quil/stroke-weight 5)
     (quil/stroke 255 0 0)
     (quil/no-fill)
     (quil/rect 0 0 (dec (quil/width)) (dec (quil/height)))))
@@ -55,14 +59,17 @@
     (doseq [id selected-ids]
       (proc/kill game id))))
 
+(def wand-key 192)
+(def backspace 8)
+
 (defn- key-pressed [game]
   (println "Key pressed:" (quil/key-code))
-  (case (quil/key-code)
-    192 (swap-edit-mode game)
+  (condp = (quil/key-code)
+    wand-key (swap-edit-mode game)
     :no-match)
   (when @(:edit game)
-    (case (quil/key-code)
-      8 (kill-selected game)
+    (condp = (quil/key-code)
+      backspace (kill-selected game)
       :no-match)))
 
 (defn get-mouse-pos []
@@ -80,23 +87,21 @@
 (defn procs-at-pos [game pos]
   (keys (filter (partial hit? pos) @(:procs game))))
 
-(defn- mouse-clicked [game]
-  ;(println "Mouse clicked:" (quil/mouse-x) (quil/mouse-y))
+(def shift-key 16)
+
+(defn- mouse-pressed [game]
   (when @(:edit game)
-    (proc/set-selected* game false)
+    (when (not= shift-key (quil/key-code))
+      (proc/set-selected* game false))
     (when-let [selection-id (first (procs-at-pos game (get-mouse-pos)))]
-      (println "Proc at mouse click:" selection-id)
       (proc/set-selected game selection-id true))))
 
-(defn start [game]
+(defn show [game]
   (quil/defsketch Sketch
     :title "HQ"
     :setup (fn [] )
     :draw (fn [] (draw game))
     :key-pressed (fn [] (key-pressed game))
-    :mouse-clicked (fn [] (mouse-clicked game))
+    :mouse-pressed (fn [] (mouse-pressed game))
     :size [512 512])
   (reset! (:sketch game) Sketch))
-
-(defn stop [game]
-  )

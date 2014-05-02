@@ -92,18 +92,18 @@
    (doseq [id (ids game group)]
      (kill game id))))
 
-;; (defn remove-key
-;;   "Remove a key from a proc with <id>."
-;;   [game id key]
-;;   (if-let [proc (get-proc game id)]
-;;     (swap! (:procs game) (fn [procs] (update-in procs [id] dissoc key)))
-;;     (println "Proc" id "not found.")))
+(defn remove-key
+  "Remove a key from a proc with <id>."
+  [game id key]
+  (if-let [proc (get-proc game id)]
+    (swap! (:procs game) (fn [procs] (update-in procs [id] dissoc key)))
+    (println "Proc" id "not found.")))
 
-;; (defn remove-key*
-;;   "Remove a key from all procs in <group>."
-;;   [game group key]
-;;   (doseq [id (ids game group)]
-;;     (remove-key game id key)))
+(defn remove-key*
+  "Remove a key from all procs in <group>."
+  [game group key]
+  (doseq [id (ids game group)]
+    (remove-key game id key)))
 
 (defn set-selected
   [game id on]

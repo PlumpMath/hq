@@ -5,19 +5,14 @@
             [quil.core :as quil]))
 
 (def g (game/make))
-(game/start g)
-(proc/ids g)
+(game/show g)
 
 (defn simple-draw [proc]
   (quil/no-stroke)
-  (if-let [color (:color proc)]
-    (comps/set-color color)
-    (quil/fill 60 180 200))
+  (comps/set-color (:color proc))
   (comps/draw-rect (:rect proc)))
 
-(proc/run g [:bg 0] {:layer 0
-                     :rect (comps/rect 40 40 40 40)
-                     :renderfn (fn [_] (quil/background 50 20 25))})
+(proc/run g [:bg 0] {:layer 0 :renderfn (fn [_] (quil/background 50 20 25))})
 
 (defn little-rect [y]
   {:rect (comps/rect 60 y 50 50)
@@ -28,9 +23,7 @@
 (doseq [i (range 7)]
   (proc/run g [:ent i] (little-rect (+ 20 (* i 70)))))
 
-;(proc/run g [:master 0] {:renderfn (fn [_] (quil/background 10 10 10))})
-
-(proc/kill* g)
+(proc/kill* g :ent)
 (proc/get-proc g [:ent 2])
 (proc/all g)
-
+(proc/ids g)
