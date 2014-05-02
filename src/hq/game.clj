@@ -9,7 +9,7 @@
 (defn draw-proc [proc]
   proc
   (when-let [renderfn (:renderfn proc)]
-    (renderfn (:data proc))))
+    (renderfn proc)))
 
 (defn draw [game]
   (quil/background 200)
@@ -25,9 +25,3 @@
 
 (defn stop [game]
   )
-
-(defn procs [game]
-  (keys (deref (:procs game))))
-
-(defn proc-inspect [game id]
-  (id (deref (:procs game))))

@@ -7,15 +7,20 @@
 
 (game/start g)
 
-(proc/run g :a
-          {:renderfn (fn [data] (quil/rect 20 10 150 130))})
+(defn simple-draw [proc]
+  (quil/no-stroke)
+  (quil/fill 60 180 200)
+  (quil/rect (:x proc) (:y proc) (:w proc) (:h proc)))
 
-(proc/run g :b {:data [1 2 3]
-                :renderfn (fn [data] (quil/rect 230 120 150 130))})
+(proc/run g [:a 1] {:renderfn #'simple-draw
+                    :x 120 :y 130 :w 30 :h 30})
 
-(game/procs g)
+(doseq [i (range 5)]
+  (proc/run g [:ent i] {:x 50 :y (+ 50 (* i 60)) :w 30 :h 30 :renderfn #'simple-draw}))
 
-(game/proc-inspect g :a)
-(game/proc-inspect g :b)
+(doall (map (partial proc/kill g) (proc/get-ids g :a)))
 
-g
+(proc/get-ids g)
+(count (proc/get-ids g))
+
+(proc/get-proc g [:ent 0])
