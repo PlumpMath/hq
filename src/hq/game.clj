@@ -37,6 +37,9 @@
     (when @(:edit game)
       (quil/fill 255)
       (when-let [rect (:rect proc)]
+        (quil/fill 255 100)
+        (quil/rect (:x rect) (:y rect) (+ (quil/text-width (str id)) 10) 20)
+        (quil/fill 0)
         (quil/text (str id) (+ (:x rect) 5) (+ (:y rect) 15))
         (when (-> proc :editor :selected)
           (quil/stroke 0 255 255)
@@ -71,13 +74,15 @@
 
 (defn- mouse-pressed [game]
   (when @(:edit game)
-    (when (not= shift-key (quil/key-code))
-      (proc/set-selected* game false))
-    (when-let [selection-id (first (proc/procs-at-pos game (get-mouse-pos)))]
-      (proc/set-selected game selection-id true))))
+    (if-let [selection-id (first (proc/ids-at-pos game (get-mouse-pos)))]
+      (let [selected (-> (proc/get-proc game selection-id) :editor :selected)]
+        (when (not (and (quil/key-pressed?) (= shift-key (quil/key-code))))
+          (proc/set-selected* game false))
+        (proc/set-selected game selection-id (not selected)))
+      (proc/set-selected* game false))))
 
 (defn show [game]
-  (quil/defsketch Sketch
+  (quil/sketch
     :title "HQ"
     :setup (fn [] )
     :draw (fn [] (draw game))

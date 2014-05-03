@@ -119,13 +119,18 @@
   [game id on]
   (swap! (:procs game) (fn [procs] (assoc-in procs [id :editor :selected] on))))
 
+(defn flip-selected
+  "Flips editor selection for a proc with <id>."
+  [game id]
+  (swap! (:procs game) (fn [procs] (update-in procs [id :editor :selected] not))))
+
 (defn set-selected*
   "Turn on/off editor selection for all procs in <group>."
   [game on]
   (doseq [id (ids game)]
      (set-selected game id on)))
 
-(defn hit? [[px py] [id proc]]
+(defn hit? [[px py] proc]
   (when-let [rect (:rect proc)]
     (let [x (:x rect)
           y (:y rect)
@@ -134,5 +139,5 @@
       (and (< x px (+ x w))
            (< y py (+ y h))))))
 
-(defn procs-at-pos [game pos]
-  (keys (filter (partial hit? pos) @(:procs game))))
+(defn ids-at-pos [game pos]
+  (map :id (filter (partial hit? pos) (all game))))
