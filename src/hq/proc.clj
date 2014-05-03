@@ -16,10 +16,10 @@
 
 (def editor {:selected false})
 
-(defrecord Proc [status layer editor handler renderfn])
+(defrecord Proc [status id layer editor handler renderfn])
 
-(defn- make-proc []
-  (Proc. :ok 0 editor nil nil))
+(defn- make-proc [id]
+  (Proc. :ok id 0 editor nil nil))
 
 (defn get-proc [game id]
   (get @(:procs game) id))
@@ -32,7 +32,7 @@
    (let [matcher (fn [[[g number] proc]] (= g group))]
      (keys (filter matcher @(:procs game))))))
 
-(defn free-id
+(defn- free-id
   "Creates a free id for <group>."
   [game group]
   (let [ids (set (ids game))]
@@ -45,7 +45,7 @@
 (defn- ensure-proc [game id]
   (if-let [proc (get-proc game id)]
     proc
-    (let [new-proc (make-proc)]
+    (let [new-proc (make-proc id)]
       (swap! (:procs game) (fn [procs] (assoc procs id new-proc)))
       new-proc)))
 
@@ -73,7 +73,9 @@
     (swap! (:procs game) assoc id (merge proc settings))
     (set-status game id :ok)))
 
-(defn all [game]
+(defn all
+  "Get all the procs in a <game>."
+  [game]
   (vals @(:procs game)))
 
 (defn kill
@@ -92,6 +94,13 @@
    (doseq [id (ids game group)]
      (kill game id))))
 
+(defn kill-selected
+  "Stop all selected procs."
+  [game]
+  (let [selected-ids (keys (filter (fn [[id proc]] (-> proc :editor :selected)) @(:procs game)))]
+    (doseq [id selected-ids]
+      (kill game id))))
+
 (defn remove-key
   "Remove a key from a proc with <id>."
   [game id key]
@@ -106,10 +115,24 @@
     (remove-key game id key)))
 
 (defn set-selected
+  "Turn on/off editor selection for a proc with <id>."
   [game id on]
   (swap! (:procs game) (fn [procs] (assoc-in procs [id :editor :selected] on))))
 
 (defn set-selected*
+  "Turn on/off editor selection for all procs in <group>."
   [game on]
   (doseq [id (ids game)]
      (set-selected game id on)))
+
+(defn hit? [[px py] [id proc]]
+  (when-let [rect (:rect proc)]
+    (let [x (:x rect)
+          y (:y rect)
+          w (:w rect)
+          h (:h rect)]
+      (and (< x px (+ x w))
+           (< y py (+ y h))))))
+
+(defn procs-at-pos [game pos]
+  (keys (filter (partial hit? pos) @(:procs game))))
