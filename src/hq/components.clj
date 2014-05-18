@@ -12,3 +12,15 @@
 
 (defn set-color [color]
   (quil/fill (:r color) (:g color) (:b color)))
+
+(defn color-rect [proc]
+  (quil/no-stroke)
+  (set-color (:color proc))
+  (draw-rect (:rect proc)))
+
+(defn color-circle [proc]
+  (let [rect (:rect proc)]
+    (quil/no-stroke)
+    (set-color (:color proc))
+    (quil/ellipse-mode :corner)
+    (quil/ellipse (:x rect) (:y rect) (:w rect) (:h rect))))

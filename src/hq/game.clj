@@ -17,6 +17,7 @@
   (quil/fill 255 0 255)
   (if-let [rect (:rect proc)]
     (do
+      (quil/stroke-weight 1)
       (comps/draw-rect rect)
       (quil/stroke 0 255 255)
       (quil/line (:x rect) (:y rect) (+ (:x rect) (:w rect)) (+ (:y rect) (:h rect)))
@@ -48,45 +49,59 @@
           (comps/draw-rect rect))))))
 
 (defn- draw [game]
-  (quil/background 200)
   (doall (map (partial draw-proc game) (sort-by :layer (proc/all game))))
-  (when @(:edit game)
-    (quil/stroke-weight 5)
-    (quil/stroke 255 0 0)
-    (quil/no-fill)
-    (quil/rect 0 0 (dec (quil/width)) (dec (quil/height)))))
+  (if @(:edit game)
+    ; Edit
+    (do
+      (quil/stroke-weight 5)
+      (quil/stroke 255 0 0)
+      (quil/no-fill)
+      (quil/rect 0 0 (dec (quil/width)) (dec (quil/height))))
+    ; Not edit
+    (do
+      (proc/message-all game :tick)
+      )))
 
 (defn- swap-edit-mode [game]
   (swap! (:edit game) #(not %)))
 
 (defn- key-pressed [game]
-  (println "Key pressed:" (quil/key-code))
+  ;(println "Key pressed:" (quil/key-code))
   (condp = (quil/key-code)
     wand-key (swap-edit-mode game)
     :no-match)
-  (when @(:edit game)
-    (condp = (quil/key-code)
-      backspace (proc/kill-selected game)
-      :no-match)))
+  (if @(:edit game)
+    (do
+      (condp = (quil/key-code)
+          backspace (proc/kill-selected game)
+          :no-match))
+    (do
+      (proc/message-all game [:key-pressed (quil/key-code)]))))
 
 (defn get-mouse-pos []
   [(quil/mouse-x) (quil/mouse-y)])
 
 (defn- mouse-pressed [game]
-  (when @(:edit game)
+  (if @(:edit game)
+    ; Edit
     (if-let [selection-id (first (proc/ids-at-pos game (get-mouse-pos)))]
       (let [selected (-> (proc/get-proc game selection-id) :editor :selected)]
         (when (not (and (quil/key-pressed?) (= shift-key (quil/key-code))))
           (proc/set-selected* game false))
         (proc/set-selected game selection-id (not selected)))
-      (proc/set-selected* game false))))
+      (proc/set-selected* game false))
+    ; Play
+    (proc/message-all game [:mouse-pressed [(quil/mouse-x) (quil/mouse-y)]])))
+
+(defn setup []
+  (quil/frame-rate 30))
 
 (defn show [game]
-  (quil/sketch
-    :title "HQ"
-    :setup (fn [] )
-    :draw (fn [] (draw game))
-    :key-pressed (fn [] (key-pressed game))
-    :mouse-pressed (fn [] (mouse-pressed game))
-    :size [512 512])
-  (reset! (:sketch game) Sketch))
+  (let [sketch (quil/sketch
+                :title "HQ"
+                :setup setup
+                :draw #(draw game)
+                :key-pressed #(key-pressed game)
+                :mouse-pressed #(mouse-pressed game)
+                :size [512 512])]
+    (reset! (:sketch game) sketch)))
