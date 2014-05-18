@@ -1,20 +1,21 @@
 (ns hq.game
   (:require [quil.core :as quil]
             [hq.proc :as proc]
-            [hq.components :as comps])
+            [hq.components :as comps]
+            [clojure.core.async :as async])
   (:import [java.awt.event KeyEvent]))
 
 (def wand-key 192)
 (def backspace 8)
 (def shift-key 16)
 
-(defrecord Game [procs sketch edit])
-
-(defn make []
-  (Game. (atom {}) (atom nil) (atom false)))
+(defrecord Game [procs sketch edit stdout])
 
 (defn stop [game]
-  (proc/kill* game)
+  (async/go
+   (proc/kill* game)
+   (async/<! (async/timeout 1000)) ; wait for them to send their death message to stdout
+   (async/>! (:stdout game) :STOP))
 ;;   (reset! (:procs game) [])
 ;;   (reset! (:sketch game) nil)
 ;;   (reset! (:edit game) false)
@@ -107,9 +108,9 @@
 (defn on-close [game]
   (stop game))
 
-(defn show [game window-size]
+(defn show [game title window-size]
   (let [sketch (quil/sketch
-                :title "HQ"
+                :title title
                 :setup setup
                 :draw #(draw game)
                 :key-pressed #(key-pressed game)
@@ -117,3 +118,18 @@
                 :size window-size
                 :on-close #(on-close game))]
     (reset! (:sketch game) sketch)))
+
+(defn output-loop [chan]
+  (async/go
+   (loop []
+     (let [msg (async/<!! chan)]
+       (if (not= msg :STOP)
+         (do
+           (println msg)
+           (recur)))))))
+
+(defn make [title window-size]
+  (let [game (Game. (atom {}) (atom nil) (atom false) (async/chan))]
+    (show game title window-size)
+    (output-loop (:stdout game))
+    game))

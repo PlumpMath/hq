@@ -61,9 +61,12 @@
 (defn- internal-kill-proc [game id]
   (swap! (:procs game) (fn [procs] (dissoc procs id))))
 
+(defn game-print [game & msg]
+  (async/go (async/>! (:stdout game) (apply str msg))))
+
 (defn- start-go-loop [game id channel]
   (async/go
-   (println "Proc" id "started.")
+   ;(game-print game "Proc " id " started.")
    (loop []
      (let [[message c] (async/alts! [channel])
            proc (get-proc game id)
@@ -80,7 +83,7 @@
              (recur))
            (recur) ; Status is not :ok, ignore message and recur
            ))))
-   (println "Proc" id "stopped.")
+   ;(game-print game "Proc " id " stopped.")
    (internal-kill-proc game id)))
 
 (defn ids

@@ -7,9 +7,7 @@
    [clojure.core.async :as async]
    [clojure.core.match :refer [match]]))
 
-(def g (game/make))
-(game/show g [512 512])
-;(game/stop g)
+(def g (game/make "WAND" [512 512]))
 
 (defn nice-fill [_]
   (quil/background 70 100 125))
@@ -40,15 +38,15 @@
 (doseq [i (range 7)]
   (proc/run g [:enemy i]
           {:layer 1
-           :color (comps/color (+ 100 (* 10 i)) 100 100)
+           :color (comps/color (+ 100 (* 10 i)) 100 (+ 200 (* 30 i -1)))
            :rect (comps/rect (+ 50 (* i 60)) 100 50 50)
            :handler #'player-handler
            :renderfn comps/color-circle}))
 
-(proc/run* g)
+; (proc/run* g)
 
 ; (proc/message g [:enemy 0] :crash)
 ; (proc/message g [:enemy 0] :bang)
 ; (proc/message-all g :tick)
 
-;(proc/kill* g)
+; (proc/kill* g)
