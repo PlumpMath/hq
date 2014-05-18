@@ -87,6 +87,12 @@
     (do
       (proc/message-all game [:key-pressed (quil/key-code)]))))
 
+(defn- key-released [game]
+  (if @(:edit game)
+    (do)
+    (do
+      (proc/message-all game [:key-released (quil/key-code)]))))
+
 (defn get-mouse-pos []
   [(quil/mouse-x) (quil/mouse-y)])
 
@@ -114,6 +120,7 @@
                 :setup setup
                 :draw #(draw game)
                 :key-pressed #(key-pressed game)
+                :key-released #(key-released game)
                 :mouse-pressed #(mouse-pressed game)
                 :size window-size
                 :on-close #(on-close game))]

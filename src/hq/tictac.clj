@@ -22,22 +22,31 @@
       (assoc-in proc [:rect :y] 0)
       (update-in proc [:rect :y] #(+ 3.5 %)))))
 
+(defn steer [proc]
+  (let [{:keys [x]} (:rect proc)]
+    (update-in proc [:rect :x] #(+ (:speed proc) %))))
+
 (defn player-handler [proc msg]
   (match msg
          :down (update-in proc [:rect :y] #(+ 50 %))
-         :tick (move-and-wrap proc)
+         :tick (-> proc move-and-wrap steer)
          :crash nil
          [:mouse-pressed [x y]] (assoc-in proc [:rect :y] y)
          [:key-pressed k] (case k
-                            68 (update-in proc [:rect :x] + 10)
-                            65 (update-in proc [:rect :x] - 10)
+                            68 (assoc proc :speed 2)
+                            65 (assoc proc :speed -2)
                             proc)
+         [:key-released k] (case k
+                             68 (assoc proc :speed 0)
+                             65 (assoc proc :speed 0)
+                             proc)
          :bang (throw (Exception. "BANG!"))
          :else proc))
 
 (doseq [i (range 7)]
   (proc/run g [:enemy i]
           {:layer 1
+           :speed 0
            :color (comps/color (+ 100 (* 10 i)) 100 (+ 200 (* 30 i -1)))
            :rect (comps/rect (+ 50 (* i 60)) 100 50 50)
            :handler #'player-handler
