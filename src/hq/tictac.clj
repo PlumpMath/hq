@@ -8,7 +8,8 @@
    [clojure.core.match :refer [match]]))
 
 (def g (game/make))
-(game/show g)
+(game/show g [512 512])
+;(game/stop g)
 
 (defn nice-fill [_]
   (quil/background 70 100 125))
@@ -49,3 +50,5 @@
 ; (proc/message g [:enemy 0] :crash)
 ; (proc/message g [:enemy 0] :bang)
 ; (proc/message-all g :tick)
+
+;(proc/kill* g)

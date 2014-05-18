@@ -13,6 +13,13 @@
 (defn make []
   (Game. (atom {}) (atom nil) (atom false)))
 
+(defn stop [game]
+  (proc/kill* game)
+;;   (reset! (:procs game) [])
+;;   (reset! (:sketch game) nil)
+;;   (reset! (:edit game) false)
+  )
+
 (defn- draw-failed-proc [proc]
   (quil/fill 255 0 255)
   (if-let [rect (:rect proc)]
@@ -49,6 +56,7 @@
           (comps/draw-rect rect))))))
 
 (defn- draw [game]
+  (quil/background 200)
   (doall (map (partial draw-proc game) (sort-by :layer (proc/all game))))
   (if @(:edit game)
     ; Edit
@@ -96,12 +104,16 @@
 (defn setup []
   (quil/frame-rate 30))
 
-(defn show [game]
+(defn on-close [game]
+  (stop game))
+
+(defn show [game window-size]
   (let [sketch (quil/sketch
                 :title "HQ"
                 :setup setup
                 :draw #(draw game)
                 :key-pressed #(key-pressed game)
                 :mouse-pressed #(mouse-pressed game)
-                :size [512 512])]
+                :size window-size
+                :on-close #(on-close game))]
     (reset! (:sketch game) sketch)))

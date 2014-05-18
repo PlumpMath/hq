@@ -64,7 +64,6 @@
 (defn- start-go-loop [game id channel]
   (async/go
    (println "Proc" id "started.")
-   (flush)
    (loop []
      (let [[message c] (async/alts! [channel])
            proc (get-proc game id)
